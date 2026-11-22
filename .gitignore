@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output (tsc -> dist; rebuilt by npm run compile)
+dist/
+*.tsbuildinfo
+
+# npm pack output
+*.tgz
+
+# Python bytecode (ci/ release pipeline package)
+__pycache__/
+*.py[cod]
+
+# Coverage
+coverage/
+.nyc_output/
+
+# OS
+.DS_Store
+
+# Environment files - never store them; secrets come from AWS SSM at runtime
+.env
+.env.*

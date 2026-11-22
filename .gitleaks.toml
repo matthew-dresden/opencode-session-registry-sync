@@ -1,0 +1,21 @@
+# opencode-estate house rule (SPEC C3): NO secret-shaped material - real, test,
+# or synthetic - in any tree or git history, ever.
+#   - Real credentials come from AWS SSM Parameter Store / Secrets Manager at runtime.
+#   - Test crypto material and dummy tokens are generated at runtime, never stored.
+# This gate config is enforced on every scan of this repository.
+
+[extend]
+useDefault = true
+
+# House rule: flag any PEM private-key block in code or history.
+[[rules]]
+id = "pem-private-key-block"
+description = "PEM Private Key Block"
+regex = '''-----BEGIN [A-Z ]*PRIVATE KEY-----'''
+
+# Adjudicated 2026-11-22: OAuth client IDs in vendored dist bundles are public
+# identifiers, not credentials. Allowlisted for the generic-api-key rule only.
+[[allowlists]]
+description = "OAuth client IDs are public identifiers (adjudicated 2026-11-22)"
+targetRules = ["generic-api-key"]
+paths = ['''vendor/.*/dist/.*''']
