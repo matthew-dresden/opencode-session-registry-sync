@@ -1,0 +1,55 @@
+{
+  "name": "opencode-session-registry-sync",
+  "version": "1.0.1",
+  "type": "module",
+  "description": "OpenCode plugin that auto-registers every session in the shared cross-session registry, syncs renames, and resolves peers by name through find_session.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "license": "Apache-2.0",
+  "private": false,
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matthew-dresden/opencode-session-registry-sync-mac-dev.git"
+  },
+  "bugs": {
+    "url": "https://github.com/matthew-dresden/opencode-session-registry-sync-mac-dev/issues"
+  },
+  "homepage": "https://github.com/matthew-dresden/opencode-session-registry-sync-mac-dev#readme",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "session-registry",
+    "cross-session",
+    "find_session"
+  ],
+  "scripts": {
+    "prepare": "bash scripts/security/install-hooks.sh",
+    "prepublishOnly": "npm run clean && npm run compile",
+    "clean": "rm -rf dist",
+    "compile": "tsc",
+    "check:type": "tsc --noEmit",
+    "check:syntax": "node --check dist/index.js && node --check scripts/check-license.mjs && node --check scripts/check-tarball.mjs",
+    "check:license": "node scripts/check-license.mjs",
+    "check:tarball": "node scripts/check-tarball.mjs",
+    "check:pr-title": "python3 -m ci.validate_pr_title",
+    "check:version": "python3 -m ci.check_version_immutability --base-ref origin/main",
+    "check": "npm run check:type && npm run compile && npm run check:syntax && npm run check:license && npm run check:tarball",
+    "test": "tsx --test tests/*.test.ts",
+    "hygiene": "python3 .githooks/scan_diff.py --tree",
+    "ci": "npm run check && npm test && npm run hygiene"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
