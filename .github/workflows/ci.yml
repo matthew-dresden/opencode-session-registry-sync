@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validate PR title (conventional commits, breaking ! supported)
+        shell: bash
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PYTHONDONTWRITEBYTECODE: 1
+        run: npm run check:pr-title -- --title "$PR_TITLE"
+
+  # TypeScript sources: tsc --noEmit is the syntax/type gate (node --check
+  # cannot parse .ts; it runs over the emitted dist/index.js in the build job).
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Type check (tsc --noEmit)
+        shell: bash
+        run: npm run check:type
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Compile (tsc -> dist/)
+        shell: bash
+        run: npm run compile
+
+      - name: Syntax check (node --check over dist and script tooling)
+        shell: bash
+        run: npm run check:syntax
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Behavioral tests (node:test via tsx)
+        shell: bash
+        run: npm test
+
+  license-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: License and NOTICE compliance
+        shell: bash
+        run: npm run check:license
+
+  tarball-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Compile for tarball contents
+        shell: bash
+        run: npm run compile
+
+      - name: Tarball allowlist and leak gates
+        shell: bash
+        run: npm run check:tarball
+
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # The same scanner the pre-push hook uses, here over the full committed
+      # tree instead of a push diff.
+      - name: Secret scan and lint (npm run hygiene)
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
+        run: npm run hygiene
+
+  version-immutability:
+    # Release-bot PRs are exempt: the release pipeline owns the version field.
+    # The identity comes from the RELEASE_BOT_LOGIN repo variable and the gate
+    # is fail-closed: when the variable is unset, the exemption matches
+    # nobody and the check runs on every PR.
+    if: github.event.pull_request.user.login != vars.RELEASE_BOT_LOGIN
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Version immutability (package.json version is release-automation-owned)
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: 1
+        run: npm run check:version
