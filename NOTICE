@@ -1,0 +1,12 @@
+opencode-session-registry-sync
+Copyright 2026 Matthew Dresden
+
+This project is part of the opencode configuration estate owned by
+Matthew Dresden. It is an original implementation written against the
+opencode v2 plugin API ({ id, setup } shape). The release pipeline
+tooling in ci/ is adapted from the prose-style release pipeline
+(github.com/matthew-dresden/prose-style) as documented in each module's
+docstring; the secret-scanning kit in .githooks/ and
+scripts/security/ is the estate T44 enforcement kit.
+
+Contact: open an issue in this repository.
